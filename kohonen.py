@@ -45,7 +45,8 @@ class Neuron:
     @type x: numpy array
     '''
     # TODO
-    self.y = None
+    self.y = numpy.linalg.norm(self.weights-x.flatten())
+
 
   def learn(self,eta,sigma,posxjetoile,posyjetoile,x):
     '''
@@ -62,7 +63,8 @@ class Neuron:
     @type x: numpy array
     '''
     # TODO (attention à ne pas changer la partie à gauche du =)
-    self.weights[:] = numpy.random.random(self.weights.shape)
+    delta = numpy.array([self.posx-posxjetoile,self.posy-posyjetoile])
+    self.weights += eta*numpy.exp(-numpy.linalg.norm(delta)**2/(2*sigma**2))*(x.flatten()-self.weights)
 
 
 class SOM:
@@ -262,27 +264,27 @@ if __name__ == '__main__':
   # TODO décommenter les données souhaitées
   nsamples = 1200
   # Ensemble de données 1
-  samples = numpy.random.random((nsamples,2,1))*2-1
+  # samples = numpy.random.random((nsamples,2,1))*2-1
   # Ensemble de données 2
-#  samples1 = -numpy.random.random((nsamples//3,2,1))
-#  samples2 = numpy.random.random((nsamples//3,2,1))
-#  samples2[:,0,:] -= 1
-#  samples3 = numpy.random.random((nsamples//3,2,1))
-#  samples3[:,1,:] -= 1
-#  samples = numpy.concatenate((samples1,samples2,samples3))
+  samples1 = -numpy.random.random((nsamples//3,2,1))
+  samples2 = numpy.random.random((nsamples//3,2,1))
+  samples2[:,0,:] -= 1
+  samples3 = numpy.random.random((nsamples//3,2,1))
+  samples3[:,1,:] -= 1
+  samples = numpy.concatenate((samples1,samples2,samples3))
   # Ensemble de données 3
-#  samples1 = numpy.random.random((nsamples//2,2,1))
-#  samples1[:,0,:] -= 1
-#  samples2 = numpy.random.random((nsamples//2,2,1))
-#  samples2[:,1,:] -= 1
-#  samples = numpy.concatenate((samples1,samples2))
+  # samples1 = numpy.random.random((nsamples//2,2,1))
+  # samples1[:,0,:] -= 1
+  # samples2 = numpy.random.random((nsamples//2,2,1))
+  # samples2[:,1,:] -= 1
+  # samples = numpy.concatenate((samples1,samples2))
   # Ensemble de données robotiques
-#  samples = numpy.random.random((nsamples,4,1))
-#  samples[:,0:2,:] *= numpy.pi
-#  l1 = 0.7
-#  l2 = 0.3
-#  samples[:,2,:] = l1*numpy.cos(samples[:,0,:])+l2*numpy.cos(samples[:,0,:]+samples[:,1,:])
-#  samples[:,3,:] = l1*numpy.sin(samples[:,0,:])+l2*numpy.sin(samples[:,0,:]+samples[:,1,:])
+  # samples = numpy.random.random((nsamples,4,1))
+  # samples[:,0:2,:] *= numpy.pi
+  # l1 = 0.7
+  # l2 = 0.3
+  # samples[:,2,:] = l1*numpy.cos(samples[:,0,:])+l2*numpy.cos(samples[:,0,:]+samples[:,1,:])
+  # samples[:,3,:] = l1*numpy.sin(samples[:,0,:])+l2*numpy.sin(samples[:,0,:]+samples[:,1,:])
   # Affichage des données (pour les ensembles 1, 2 et 3)
   plt.figure()
   plt.scatter(samples[:,0,0], samples[:,1,0])
@@ -291,13 +293,13 @@ if __name__ == '__main__':
   plt.suptitle('Donnees apprentissage')
   plt.show()
   # Affichage des données (pour l'ensemble robotique)
-#  plt.figure()
-#  plt.subplot(1,2,1)
-#  plt.scatter(samples[:,0,0].flatten(),samples[:,1,0].flatten(),c='k')
-#  plt.subplot(1,2,2)
-#  plt.scatter(samples[:,2,0].flatten(),samples[:,3,0].flatten(),c='k')
-#  plt.suptitle('Donnees apprentissage')
-#  plt.show()
+  # plt.figure()
+  # plt.subplot(1,2,1)
+  # plt.scatter(samples[:,0,0].flatten(),samples[:,1,0].flatten(),c='k')
+  # plt.subplot(1,2,2)
+  # plt.scatter(samples[:,2,0].flatten(),samples[:,3,0].flatten(),c='k')
+  # plt.suptitle('Donnees apprentissage')
+  # plt.show()
     
   # SIMULATION
   # Affichage des poids du réseau
@@ -314,7 +316,7 @@ if __name__ == '__main__':
   	# Affichage de la grille initiale
   	network.scatter_plot(False)
   # Boucle d'apprentissage
-  for i in range(N+1):
+for i in range(N+1):
     # Choix d'un exemple aléatoire pour l'entrée courante
     index = numpy.random.randint(nsamples)
     x = samples[index].flatten()
@@ -333,14 +335,14 @@ if __name__ == '__main__':
       plt.pause(0.00001)
       plt.draw()
   # Fin de l'affichage interactif
-  if VERBOSE:
+if VERBOSE:
     # Désactivation du mode interactif
     plt.ioff()
-  else:
+else:
   	# Affichage de la grille finale
   	network.scatter_plot(False)
   # Affichage des poids du réseau
-  network.plot()
+network.plot()
   # Affichage de l'erreur de quantification vectorielle moyenne après apprentissage
-  print("erreur de quantification vectorielle moyenne ",network.quantification(samples))
+print("erreur de quantification vectorielle moyenne ",network.quantification(samples))
 
