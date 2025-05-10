@@ -302,19 +302,6 @@ def predictionAngles(network, x1, x2):
     w = network.weightsmap[jetoilex][jetoiley]
     # Renvoi des angles d'entrée
     return w[0], w[1]
-    #     weights = numpy.array(network.weightsmap)  # Conversion cruciale
-    
-    # # 2. Créer une cible au bon format
-    # target_pos = numpy.array([x1, x2])
-    
-    # # 3. Calcul des distances uniquement sur x,y (indices 2 et 3)
-    # spatial_dists = numpy.linalg.norm(weights[:,:,2:4] - target_pos, axis=2)
-    
-    # # 4. Trouver le neurone gagnant
-    # jetoilex, jetoiley = numpy.unravel_index(numpy.argmin(spatial_dists), weights.shape[:2])
-    
-    # # 5. Récupérer les angles
-    # return weights[jetoilex, jetoiley, 0], weights[jetoilex, jetoiley, 1]
 
 def predictionTrajectoire(network, anglesDebut, anglesFin, nPoints=100):
   """
