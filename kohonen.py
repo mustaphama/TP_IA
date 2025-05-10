@@ -242,11 +242,109 @@ class SOM:
     # On renvoie l'erreur de quantification vectorielle moyenne
     return s/nsamples
 
+  def autoOrganisation(self):
+      """
+      Calcule la mesure d'auto-organisation de la carte de Kohonen (la distance moyenne entre les poids des neurones adjacents).
+      @Return : float : Mesure d'auto-organisation (plus la valeur est faible,plus la carte est organisée)
+      """
+      weights = numpy.array(self.weightsmap)
+      
+      # Calcul des distances horizentals
+      hori_dist = numpy.linalg.norm(weights[:, :-1] - weights[:, 1:], axis=-1)
+      
+      # Calcul des distances verticales
+      vert_dist = numpy.linalg.norm(weights[:-1, :] - weights[1:, :], axis=-1)
+      
+
+      # Combinaison des résultats
+      distanceTotal = numpy.sum(hori_dist) + numpy.sum(vert_dist)
+
+      totalPairs = hori_dist.size + vert_dist.size
+      
+      return distanceTotal / totalPairs
+
+def predictionPosition(network, theta1, theta2):
+    """
+    @summary: Prédiction de la position de la main
+    @param network: le réseau de neurones
+    @type network: SOM
+    @param thetha1, theta2: position motrice (angles)
+    @type thetha1, theta2: float
+    @return: les coordonnées de la main
+    """
+    # Création d'un tableau d'entrée
+    x = numpy.array([theta1, theta2, 0, 0])
+    # Calcul de l'activité du réseau
+    network.compute(x)
+    # Récupération du neurone gagnant
+    jetoilex, jetoiley = numpy.unravel_index(numpy.argmin(network.activitymap), network.gridsize)
+    # Récupération des poids du neurone gagnant
+    w = network.weightsmap[jetoilex][jetoiley]
+    # Renvoi de la position de la main
+    return w[2], w[3]
+
+def predictionAngles(network, x1, x2):
+    """
+    @summary: Prédiction de la position motrice (angles)
+    @param network: le réseau de neurones
+    @type network: SOM
+    @param x1, x2: coordonnées de la main
+    @type x1, x2: float
+    @return: position motrice
+    """
+    # Création d'un tableau d'entrée
+    x = numpy.array([0, 0, x1, x2])
+    # Calcul de l'activité du réseau
+    network.compute(x)
+    # Récupération du neurone gagnant
+    jetoilex, jetoiley = numpy.unravel_index(numpy.argmin(network.activitymap), network.gridsize)
+    # Récupération des poids du neurone gagnant
+    w = network.weightsmap[jetoilex][jetoiley]
+    # Renvoi des angles d'entrée
+    return w[0], w[1]
+    #     weights = numpy.array(network.weightsmap)  # Conversion cruciale
+    
+    # # 2. Créer une cible au bon format
+    # target_pos = numpy.array([x1, x2])
+    
+    # # 3. Calcul des distances uniquement sur x,y (indices 2 et 3)
+    # spatial_dists = numpy.linalg.norm(weights[:,:,2:4] - target_pos, axis=2)
+    
+    # # 4. Trouver le neurone gagnant
+    # jetoilex, jetoiley = numpy.unravel_index(numpy.argmin(spatial_dists), weights.shape[:2])
+    
+    # # 5. Récupérer les angles
+    # return weights[jetoilex, jetoiley, 0], weights[jetoilex, jetoiley, 1]
+
+def predictionTrajectoire(network, anglesDebut, anglesFin, nPoints=100):
+  """
+  @summary: Prédiction de la trajectoire deux positions motrices
+  @param network: le réseau de neurones
+  @type network: SOM
+  @param anglesDebut: position motrice de départ (angles)
+  @type anglesDebut: tuple
+  @param anglesFin: position motrice d'arrivée (angles)
+  @type anglesFin: tuple
+  @param nPoints: nombre de points de la trajectoire
+  @type nPoints: int
+  @return: Tableau des positions (x1, x2) de la main
+  """
+  theta1Angles = numpy.linspace(anglesDebut[0], anglesFin[0], nPoints)
+  theta2Angles = numpy.linspace(anglesDebut[1], anglesFin[1], nPoints)
+
+  trajectoire = []
+  for theta1, theta2 in zip(theta1Angles, theta2Angles):
+      x1, x2 = predictionPosition(network, theta1, theta2)
+      trajectoire.append((x1, x2))
+  return numpy.array(trajectoire)
+
+    
+
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
   # Création d'un réseau avec une entrée (2,1) et une carte (10,10)
   #TODO mettre à jour la taille des données d'entrée pour les données robotiques
-  network = SOM((2,1),(10,10))
+  network = SOM((4,1),(10,10))
   # PARAMÈTRES DU RÉSEAU
   # Taux d'apprentissage
   ETA = 0.05
@@ -266,12 +364,12 @@ if __name__ == '__main__':
   # Ensemble de données 1
   # samples = numpy.random.random((nsamples,2,1))*2-1
   # Ensemble de données 2
-  samples1 = -numpy.random.random((nsamples//3,2,1))
-  samples2 = numpy.random.random((nsamples//3,2,1))
-  samples2[:,0,:] -= 1
-  samples3 = numpy.random.random((nsamples//3,2,1))
-  samples3[:,1,:] -= 1
-  samples = numpy.concatenate((samples1,samples2,samples3))
+  # samples1 = -numpy.random.random((nsamples//3,2,1))
+  # samples2 = numpy.random.random((nsamples//3,2,1))
+  # samples2[:,0,:] -= 1
+  # samples3 = numpy.random.random((nsamples//3,2,1))
+  # samples3[:,1,:] -= 1
+  # samples = numpy.concatenate((samples1,samples2,samples3))
   # Ensemble de données 3
   # samples1 = numpy.random.random((nsamples//2,2,1))
   # samples1[:,0,:] -= 1
@@ -279,27 +377,27 @@ if __name__ == '__main__':
   # samples2[:,1,:] -= 1
   # samples = numpy.concatenate((samples1,samples2))
   # Ensemble de données robotiques
-  # samples = numpy.random.random((nsamples,4,1))
-  # samples[:,0:2,:] *= numpy.pi
-  # l1 = 0.7
-  # l2 = 0.3
-  # samples[:,2,:] = l1*numpy.cos(samples[:,0,:])+l2*numpy.cos(samples[:,0,:]+samples[:,1,:])
-  # samples[:,3,:] = l1*numpy.sin(samples[:,0,:])+l2*numpy.sin(samples[:,0,:]+samples[:,1,:])
+  samples = numpy.random.random((nsamples,4,1))
+  samples[:,0:2,:] *= numpy.pi
+  l1 = 0.7
+  l2 = 0.3
+  samples[:,2,:] = l1*numpy.cos(samples[:,0,:])+l2*numpy.cos(samples[:,0,:]+samples[:,1,:])
+  samples[:,3,:] = l1*numpy.sin(samples[:,0,:])+l2*numpy.sin(samples[:,0,:]+samples[:,1,:])
   # Affichage des données (pour les ensembles 1, 2 et 3)
-  plt.figure()
-  plt.scatter(samples[:,0,0], samples[:,1,0])
-  plt.xlim(-1,1)
-  plt.ylim(-1,1)
-  plt.suptitle('Donnees apprentissage')
-  plt.show()
-  # Affichage des données (pour l'ensemble robotique)
   # plt.figure()
-  # plt.subplot(1,2,1)
-  # plt.scatter(samples[:,0,0].flatten(),samples[:,1,0].flatten(),c='k')
-  # plt.subplot(1,2,2)
-  # plt.scatter(samples[:,2,0].flatten(),samples[:,3,0].flatten(),c='k')
+  # plt.scatter(samples[:,0,0], samples[:,1,0])
+  # plt.xlim(-1,1)
+  # plt.ylim(-1,1)
   # plt.suptitle('Donnees apprentissage')
   # plt.show()
+  # Affichage des données (pour l'ensemble robotique)
+  plt.figure()
+  plt.subplot(1,2,1)
+  plt.scatter(samples[:,0,0].flatten(),samples[:,1,0].flatten(),c='k')
+  plt.subplot(1,2,2)
+  plt.scatter(samples[:,2,0].flatten(),samples[:,3,0].flatten(),c='k')
+  plt.suptitle('Donnees apprentissage')
+  plt.show()
     
   # SIMULATION
   # Affichage des poids du réseau
@@ -330,7 +428,7 @@ for i in range(N+1):
       plt.clf()
       # Remplissage de la figure
       # TODO à remplacer par scatter_plot_2 pour les données robotiques
-      network.scatter_plot(True)
+      network.scatter_plot_2(True)
       # Affichage du contenu de la figure
       plt.pause(0.00001)
       plt.draw()
@@ -345,4 +443,39 @@ else:
 network.plot()
   # Affichage de l'erreur de quantification vectorielle moyenne après apprentissage
 print("erreur de quantification vectorielle moyenne ",network.quantification(samples))
+print("auto organisation :", network.autoOrganisation())
+
+theta1 = numpy.pi/4
+theta2 = numpy.pi/4
+  # Prediction de la position de la main à partir d'une position motrice
+predX1, predX2 = predictionPosition(network, theta1, theta2)
+
+posReelX1 = l1*numpy.cos(theta1) + l2*numpy.cos(theta1 + theta2)
+posReelX2 = l1*numpy.sin(theta1) + l2*numpy.sin(theta1 + theta2)
+print(f"Position motrice: θ1={theta1:.2f}, θ2={theta2:.2f}")
+print(f"Position de la main prédite : x1={predX1:.2f}, x2={predX2:.2f}")
+print(f"Position réelle : x1={posReelX1:.2f}, x2={posReelX2:.2f}")
+print(f"Erreur de prédiction : {numpy.linalg.norm([predX1-posReelX1, predX2-posReelX2]):.2f}")
+  # Prediction des angles à  partir d'une position de main
+x1 = 0.49
+x2 = 0.79
+theta1pred, theta2pred = predictionAngles(network, x1, x2)
+print(f"Position testée : x={x1:.2f}, x2={x2:.2f}")
+print(f"Position motrice prédits : θ1={theta1pred:.2f}, θ2={theta2pred:.2f}")
+print(f"Erreur de prédiction : {numpy.linalg.norm([theta1pred-theta1, theta2pred-theta2]):.2f}")
+
+
+### Trajectoire entre deux positions motrices
+# Définition des angles de départ et d'arrivée
+anglesDebut = (numpy.pi/4, numpy.pi/4)
+anglesFin = (numpy.pi/2, numpy.pi/2)
+
+trajectoire = predictionTrajectoire(network, anglesDebut, anglesFin)
+# Affichage de la trajectoire
+plt.figure()
+plt.plot(trajectoire[:,0], trajectoire[:,1], 'k')
+plt.title('Trajectoire de la main pour les angles entre (' 
+          + str(round(anglesDebut[0], 3)) + ', ' + str(round(anglesDebut[1], 3)) 
+          + ') et (' + str(round(anglesFin[0], 3)) + ', ' + str(round(anglesFin[1], 3))) + ')'
+plt.show()
 
