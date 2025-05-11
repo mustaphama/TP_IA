@@ -463,6 +463,6 @@ plt.figure()
 plt.plot(trajectoire[:,0], trajectoire[:,1], 'k')
 plt.title('Trajectoire de la main pour les angles entre (' 
           + str(round(anglesDebut[0], 3)) + ', ' + str(round(anglesDebut[1], 3)) 
-          + ') et (' + str(round(anglesFin[0], 3)) + ', ' + str(round(anglesFin[1], 3))) + ')'
+          + ') et (' + str(round(anglesFin[0], 3)) + ', ' + str(round(anglesFin[1], 3))+ ')') 
 plt.show()
 
