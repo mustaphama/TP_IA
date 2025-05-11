@@ -363,6 +363,20 @@ if __name__ == '__main__':
   # samples2 = numpy.random.random((nsamples//2,2,1))
   # samples2[:,1,:] -= 1
   # samples = numpy.concatenate((samples1,samples2))
+     # Ensemble de données 5 (carré avec centre dense)
+  # x = numpy.random.uniform(-1, 1, nsamples)
+  # y = numpy.random.uniform(-1, 1, nsamples)
+  # # Calcul de la densité en fonction de la distance au centre
+  # distances = x**2 + y**2  # Distance au carré pour éviter une racine carrée inutile
+  # weights = numpy.exp(-distances / 0.2)  # Gradient de densité
+  # weights = numpy.exp(-(1-distances) / 0.2)  # Gradient de densité (inverse)
+  # # Normalisation des poids pour qu'ils forment une distribution de probabilité
+  # weights /= weights.sum()
+  # # Sélection des indices en fonction des poids
+  # indices = numpy.random.choice(range(nsamples), size=nsamples, p=weights)
+  # samples = numpy.zeros((nsamples, 2, 1))
+  # samples[:, 0, 0] = x[indices]
+  # samples[:, 1, 0] = y[indices] 
   # Ensemble de données robotiques
   samples = numpy.random.random((nsamples,4,1))
   samples[:,0:2,:] *= numpy.pi
